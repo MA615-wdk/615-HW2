@@ -56,7 +56,6 @@ Set aside the electric vehicles, we can see there is a steady increase of mpg fo
 
 
 
-
 ```{r}
 #Plot of fuel cost over 40 years for different fuel types.
 ggplot(car1) +
