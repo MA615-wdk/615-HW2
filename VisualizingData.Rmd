@@ -1,0 +1,261 @@
+---
+title: "Visualizing Data With ggplot2"
+author: "Kai"
+date: "2022-09-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(esquisse)
+library(tidyverse)
+library(ggplot2)
+library(tidyquant)
+library(lubridate)
+```
+
+## Problem 1 
+### Question 1
+
+```{r}
+#Prepare the data, consider only columns that will be useful for the analysis. 
+car <- read_csv("~/Desktop/615/vehicles.csv")
+car$phevBlended <- as.logical(car$phevBlended)
+car1 <- car[c("year", "make", "model", "mpgData","phevBlended", "city08","highway08","UHighway","UCity","fuelType1","fuelType","fuelCost08")]
+#Sort out vehicles that only use a single source of fuel.
+car1 <- subset(car1, phevBlended == FALSE)
+```
+
+
+```{r}
+#Plot of mpg highway of all the vehicles using fuel type 1
+ggplot(car1) +
+ aes(x = year, y = UHighway, colour = fuelType1) +
+ geom_point(shape = "circle", size = 1.5) +
+ scale_color_hue(direction = 1) +
+ labs(x = "Year", y = "MPG in Highway", title = "MPG Highway For Different Fuel Types In 40 Years", 
+ color = "Fuel Type") +
+ theme_minimal()
+```
+
+```{r}
+#Plot of mpg city of all the vehicles using fuel type 1
+ggplot(car1) +
+ aes(x = year, y = UCity, colour = fuelType1) +
+ geom_point(shape = "circle", size = 1.5) +
+ scale_color_hue(direction = 1) +
+ labs(x = "Year", y = "MPG in Highway", title = "MPG City For Different Fuel Types In 40 Years", 
+ color = "Fuel Type") +
+ theme_minimal()
+```
+
+These two plots are the mpg for different fuel types as year growth, the first one is highway mpg and second one is city mpg. From the two plots we could see that electric vehicles starts to emerge around 2000 and the mpg for electric vehicles are leading all the way from its appearance. And the growth of mpg for electric vehicles increase rapidly between 2000 to 2020.  
+
+Set aside the electric vehicles, we can see there is a steady increase of mpg for regular gasoline and premium gasoline. The top mpg for regular gas was roughly 60 in 1990 and it went up to around 80 in 2020. And the top mpg for premium gas was roughly 10 in 1990 to around 45 in 2020.  
+
+
+
+
+```{r}
+#Plot of fuel cost over 40 years for different fuel types.
+ggplot(car1) +
+ aes(x = year, y = fuelCost08, colour = fuelType1) +
+ geom_point(shape = "circle", size = 1.5) +
+ scale_color_hue(direction = 1) +
+ labs(x = "Year", y = "Fuel Cost", title = "Fuel Cost Over 40 Years Duration For Different Fuel Types", 
+ color = "Fuel Type") +
+ theme_minimal()+
+  geom_smooth()
+```
+
+From this plot we could see the trend of fuel cost is very different for different fuel types and years. The biggest mover among all the fuel types is Diesel, we could see rapid up and down from 1995 to 2010. For electricity, it is steadily decreasing from 2000 to 2023. Regular gas is also slightly decreased from 2005 to 2023.
+
+Fuel cost could be affected by multiple reasons, include: supply, demand and storage of oil, macro economy(laws, Inflation), International politics(war), substitute for new energy, etc. 
+
+From the above we could see that electricity is the most cost and effective fuel type. It cost the cheapest and last longest compare with all other fuel types. 
+
+
+
+
+### Question 2
+
+```{r}
+# Make a subset comparing Infiniti, Audi, Mercedes-Benz, and BMW. 
+car2 <- subset(car1, make == c("Infiniti","Audi", "Mercedes-Benz", "BMW"))
+library(ggplot2)
+```
+
+```{r}
+ggplot(car2) +
+ aes(x = year, y = highway08) +
+ geom_point(shape = "circle", size = 1.5, colour = "#228B22") +
+ labs(x = "Year", y = "MPG", title = "MPG highway vs. 40 Years Duration", subtitle = "Comparing Infiniti, Audi, BMW, and Mercedes-Benz") +
+ theme_minimal() +
+ facet_wrap(vars(make))+
+  geom_smooth()
+```
+
+
+From the plot, the fist thing we could see are some dots that are significant higher than the majority, the explanation for these outliers is that they use electricity as their fuel, and cars using fully electricity usually have a 100 mpge. 
+
+From this we could see all these brands have made progress between 2010 and 2020. 
+
+
+```{r}
+#Put them together.
+ggplot(car2) +
+ aes(x = year, y = highway08, colour = make) +
+ geom_area(size = 1.5) +
+ scale_color_hue(direction = 1) +
+ labs(x = "Year", y = "MPG", title = "MPG highway vs. 40 Years Durationf", subtitle = "Comparing Infiniti, Audi, BMW, and Mercedes-Benz") +
+ theme_minimal()
+
+```
+
+Now we could see that Audi has made the most progress over the past 40 years. 
+
+## Problem 2
+
+```{r}
+stock<- read_csv("~/Desktop/615/IXIC21-22.csv")
+colnames(stock)<- tolower(colnames(stock))
+```
+
+```{r}
+aapl_range_60_tbl <- stock %>%
+    tail(60) %>%
+    summarise(
+        max_high = max(high),
+        min_low  = min(low)
+    )
+
+aapl_range_60_tbl
+
+```
+
+```{r}
+stock %>%
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    labs(x = "Date", y = "Adjust Close", title = "The Nasdaq Composite Candlestick Chart") +
+    theme_tq()
+```
+
+This plot shows the stock status on given data between Sep.21 2021 to Sep.21 2022, and red color means on that date the closing price is higher than the opening price, the blue color means the opposite. 
+
+
+## Problem 3
+### Question 1
+```{r}
+rural <- read_csv("~/Desktop/615/ruralCapacityData.csv")
+```
+
+```{r}
+#Omit Berniliio County
+rural1<- rural[-c(1),]
+
+ggplot(rural1) +
+ aes(x = County, y = cap_index) +
+ geom_col(fill = "#B22222") +
+ labs(x = "County", y = "Cap_Index", 
+ title = "Capacity Index For Each County") +
+ theme_minimal()
+
+```
+
+
+```{r}
+ggplot(rural1) +
+ aes(x = County, y = per_insured) +
+ geom_col(fill = "#EF562D") +
+ labs(x = "County", y = "Per_Insured", 
+ title = "Percentage of Population with Health Insurance For Each County") +
+ theme_minimal()
+
+```
+
+```{r}
+AVERAGE(rural$per_insured)
+```
+
+
+From this chart we could see that all the counties have an percentage over 75% on people insured, and the average of health insurance coverage is 91.18% for all the countries. This might explain the reason why the capacity for rural area is very high. 
+
+
+### Question 2
+
+```{r}
+
+library(ggplot2)
+
+ggplot(rural1) +
+ aes(x = per_over_25_with_bach, y = house_broadband, size = cap_index) +
+ geom_jitter() +
+ labs(x = "Per_over25_with_bach", y = "House with Broadband", title = "Percentage of 25Yr or older With Bach VS. House With Broadband") +
+ theme_minimal()+
+  geom_smooth()
+
+```
+
+
+From this plot I could see a trend that with higher cap_index, the house with broadband will be higher. But I don't see there is any relationship between per_over25_with_bach and house with broadband.  
+
+### Question 3
+
+```{r}
+p1<-subset(rural, rural$pop_total < 16000)
+p2<-subset(rural, rural$pop_total > 16000 & rural$pop_total < 55000)
+p3<-subset(rural, 55000 < rural$pop_total)
+```
+
+```{r}
+#Plot Cap_index for counties with population less than 16000
+ggplot(p1) +
+ aes(x = County, y = cap_index) +
+ geom_col(fill = "#112446") +
+ labs(x = "County", y = "Cap_Index", 
+ title = "Cap_index for counties with population less than 16000") +
+ theme_minimal()
+```
+
+```{r}
+#Plot Cap_index for counties with population between 16000 and 55000
+ggplot(p2) +
+ aes(x = County, y = cap_index) +
+ geom_col(fill = "#112446") +
+ labs(x = "County", y = "Cap_index", 
+ title = "Cap_index for counties with population between 16000 and 55000") +
+ theme_minimal()
+
+```
+
+
+```{r}
+#Plot Cap_index for counties with population more than 55000
+ggplot(p3) +
+ aes(x = County, y = cap_index) +
+ geom_col(fill = "#112446") +
+ labs(x = "County", y = "Cap_Index", 
+ title = "Cap_index for counties with population more than 55000") +
+ theme_minimal()
+
+```
+
+```{r}
+#The average cap_index for pop_total < 16000
+AVERAGE(p1$cap_index)
+```
+```{r}
+#The average cap_index for 16000 < pop_total < 55000 
+AVERAGE(p2$cap_index)
+```
+
+```{r}
+#The average cap_index for pop_total > 55000
+AVERAGE(p3$cap_index)
+```
+
+From these three plots I noticed a very interesting thing, the more population it has, the higher the cap_index. The average Cap_Index for p1, p2, and p3 is 55.54, 83.82, and 87.72. 
+
+
